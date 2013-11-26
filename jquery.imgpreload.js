@@ -43,40 +43,58 @@ if ('undefined' != typeof jQuery)
 			// use of typeof required
 			// https://developer.mozilla.org/En/Core_JavaScript_1.5_Reference/Operators/Special_Operators/Instanceof_Operator#Description
 			if ('string' == typeof imgs) { imgs = new Array(imgs); }
+			
+			if($.isPlainObject(imgs)) { imgs = $.map(imgs, function(value, key){ return { key: key, value: value }; }); }
+			
+			var loaded = new Array(), type = $.isArray(imgs) ? 'array' : '';
 
-			var loaded = new Array();
-
-			$.each(imgs,function(i,elem)
+			function load(i)
 			{
+				if( ++i >= imgs.length ) {
+				  return;
+				}
+				
 				var img = new Image();
 
-				var url = elem;
-
 				var img_obj = img;
+				
+				var key = i;
 
-				if ('string' != typeof elem)
-				{
-					url = $(elem).attr('src') || $(elem).css('background-image').replace(/^url\((?:"|')?(.*)(?:'|")?\)$/mg, "$1");
-
-					img_obj = elem;
+				if(type == 'array') {
+					img_obj = img;
+					url = imgs[i];
+					if(url.key) {
+						key = url.key;
+						url = url.value;
+					}
+				} else {
+					img_obj = imgs.get(i);
+					url = img_obj.src || img_obj.style.backgroundImage.replace(/^url\((?:"|')?(.*)(?:'|")?\)$/mg, "$1");
 				}
 
 				$(img).bind('load error', function(e)
 				{
 					loaded.push(img_obj);
 
-					$.data(img_obj, 'loaded', ('error'==e.type)?false:true);
+					$.data(img_obj, 'loaded', 'error' != e.type);
 					
-					if (settings.each instanceof Function) { settings.each.call(img_obj); }
+					if (settings.each instanceof Function) { settings.each.call(img_obj, key, Math.round(loaded.length / imgs.length * 100)); }
 
 					// http://jsperf.com/length-in-a-variable
 					if (loaded.length>=imgs.length && settings.all instanceof Function) { settings.all.call(loaded); }
 
 					$(this).unbind('load error');
+					
+					!settings.async && load(i); 
 				});
 
 				img.src = url;
-			});
+				
+				settings.async && load(i); 
+			}
+			load(-1);
+			
+			return imgs;
 		};
 
 		$.fn.imgpreload = function(settings)
@@ -90,6 +108,7 @@ if ('undefined' != typeof jQuery)
 		{
 			each: null // callback invoked when each image in a group loads
 			, all: null // callback invoked when when the entire group of images has loaded
+			, async: true
 		};
 
 	})(jQuery);
