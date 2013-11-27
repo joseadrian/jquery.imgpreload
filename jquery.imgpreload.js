@@ -90,7 +90,7 @@ if ('undefined' != typeof jQuery)
 				img.src = url;
 				
 				settings.async && load(i); 
-			}(-1);
+			})(-1);
 			
 			return imgs;
 		};
