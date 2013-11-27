@@ -48,8 +48,7 @@ if ('undefined' != typeof jQuery)
 			
 			var loaded = new Array(), type = $.isArray(imgs) ? 'array' : '';
 
-			function load(i)
-			{
+			(function load(i){
 				if( ++i >= imgs.length ) {
 				  return;
 				}
@@ -91,8 +90,7 @@ if ('undefined' != typeof jQuery)
 				img.src = url;
 				
 				settings.async && load(i); 
-			}
-			load(-1);
+			}(-1);
 			
 			return imgs;
 		};
